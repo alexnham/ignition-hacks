@@ -1,9 +1,9 @@
-import Whiteboard from "./Whiteboard";
+import AudioRecorder from "./button_recorder";
 
 function App() {
   return (
     <div className="App">
-     <Whiteboard />
+     <AudioRecorder />
     </div>
   );
 }
