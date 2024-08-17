@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { PDFDocument, rgb } from 'pdf-lib';
+import jsPDF from 'jspdf';
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -37,66 +38,27 @@ const AudioRecorder = () => {
     }
   };
 
-  const arrayBufferToBase64 = (buffer) => {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-  };
-
   const downloadPdfWithAudio = async () => {
     if (!audioBlob) return;
-
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 400]);
-    const { width, height } = page.getSize();
-
-    // Draw text on the PDF
-    page.drawText('Patient Information', { x: 50, y: height - 50, size: 18, color: rgb(0, 0, 0) });
-    page.drawText(`Name: ${patientName}`, { x: 50, y: height - 100, size: 14, color: rgb(0, 0, 0) });
-    page.drawText(`DOB: ${patientDob}`, { x: 50, y: height - 130, size: 14, color: rgb(0, 0, 0) });
-
-    // Convert audio to base64 for embedding
-    const audioArrayBuffer = await audioBlob.arrayBuffer();
-    const audioBase64 = arrayBufferToBase64(audioArrayBuffer);
-
-    // Draw an annotation linking to the base64-encoded audio data
-    page.drawText('Click to access the audio file:', { x: 50, y: height - 160, size: 14, color: rgb(0, 0, 1) });
-
-    // Embed a link annotation (a clickable link that triggers the download)
-    page.drawRectangle({
-      x: 50,
-      y: height - 170,
-      width: 200,
-      height: 20,
-      color: rgb(0, 0, 1),
-      borderColor: rgb(0, 0, 0),
-      borderWidth: 1,
-    });
-
-    // Add the link text
-    page.drawText('Download audio', {
-      x: 55,
-      y: height - 180,
-      size: 14,
-      color: rgb(1, 1, 1),
-      link: `data:audio/wav;base64,${audioBase64}`, // this will prompt the download when clicked
-    });
-
+  
+    // Convert audio to a Blob URL
+    const audioUrl = URL.createObjectURL(audioBlob);
+  
+    // Create a new jsPDF document
+    const pdfDoc = new jsPDF();
+  
+    // Add patient information text
+    pdfDoc.text('Patient Information', 20, 20);
+    pdfDoc.text(`Name: ${patientName}`, 20, 30);
+    pdfDoc.text(`DOB: ${patientDob}`, 20, 40);
+  
+    // Add a clickable link to the PDF that uses the Blob URL
+    pdfDoc.textWithLink('Click to listen to the recorded audio', 20, 60, { url: audioUrl });
+  
     // Save the PDF and trigger download
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const pdfUrl = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = pdfUrl;
-    a.download = 'patient_info.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    pdfDoc.save('patient_info.pdf');
   };
+  
 
   return (
     <div>
@@ -126,6 +88,13 @@ const AudioRecorder = () => {
       {audioBlob && (
         <div>
           <h3>Recorded Audio Ready</h3>
+          
+          {/* Audio Player */}
+          <audio controls>
+            <source src={URL.createObjectURL(audioBlob)} type="audio/wav" />
+            Your browser does not support the audio element.
+          </audio>
+
           <button onClick={downloadPdfWithAudio}>Download PDF with Audio</button>
         </div>
       )}
