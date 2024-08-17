@@ -5,7 +5,7 @@ const Whiteboard = () => {
   const canvasRef = useRef(null);
   const [drawing, setDrawing] = useState(false);
   const [context, setContext] = useState(null);
-    const [image, setImage] = useState(null)
+  const [image, setImage] = useState(null)
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -40,22 +40,31 @@ const Whiteboard = () => {
     setImage(dataURL);
   };
 
+  const clear = () => {
+    const canvas = canvasRef.current;
+    context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+    setImage(null); // Remove the image
+  };
+
   return (
     <div>
-              <button className='w-96 flex' onClick={takeScreenshot}>
+      <button className='w-96 flex' onClick={takeScreenshot}>
         Take Screenshot
       </button>
-    <div className='flex'>
-      <canvas
-        ref={canvasRef}
-        onMouseDown={startDrawing}
-        onMouseUp={stopDrawing}
-        onMouseMove={draw}
-        width="800"
-        height="600"
-        style={{ border: '1px solid black', cursor: 'crosshair' }}
-      />
-      <img width="800" height="600" src={image}></img>
+      <button className='clear' onClick={clear}>
+        Clear
+      </button>
+      <div className='flex'>
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseUp={stopDrawing}
+          onMouseMove={draw}
+          width="800"
+          height="600"
+          style={{ border: '1px solid black', cursor: 'crosshair' }}
+        />
+        <img width="800" height="600" src={image}></img>
       </div>
     </div>
   );
