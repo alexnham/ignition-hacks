@@ -307,7 +307,7 @@ const AudioRecorder = () => {
     }
   
     // Add image at the bottom
-    const imagePath = '/image.png'; // Path to the image in the public directory
+    /*const imagePath = '/image.png'; // Path to the image in the public directory
     const response = await fetch(imagePath);
     const arrayBuffer = await response.arrayBuffer();
   
@@ -323,7 +323,7 @@ const AudioRecorder = () => {
       y: yPosition - pngDims.height - 20,
       width: pngDims.width,
       height: pngDims.height,
-    });
+    });*/
   
     const pdfBytes = await pdfDoc.save();
     const link = document.createElement('a');
