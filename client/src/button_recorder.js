@@ -1,16 +1,124 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PDFDocument, rgb } from 'pdf-lib';
+import fs from 'fs';
+import path from 'path';
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
+  const [patientId, setPatientId] = useState('');
   const [patientName, setPatientName] = useState('');
   const [patientDob, setPatientDob] = useState('');
   const [audioBlob, setAudioBlob] = useState(null);
   const [transcript, setTranscript] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [summary, setSummary] = useState('');
+  const [symptoms, setSymptoms] = useState([]);
+  const [related, setRelated] = useState([]);
+  const [fullSummary, setFullSummary] = useState('')
+  const [relatedFinal, setRelatedFinal] = useState([]);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
+  useEffect(() => {
+    const fetchSymptoms = async () => {
+      try {
+        if (summary) {
+          const response = await fetch('http://localhost:3000/symptoms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: `${summary.message}, based on this summary, what are the symptoms of the patient, describe each symptom with ONE WORD and in an array`,
+            }),
+          });
+          const json = await response.json();
+          const data = JSON.parse(json.symptoms);
+          if (Array.isArray(data)) {
+            setSymptoms(data);
+          } else {
+            console.error('Data is not an array');
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    fetchSymptoms();
+  }, [summary]);
+
+  useEffect(() => {
+    const fetchRelated = async () => {
+      try {
+        const relatedArray = [];
+        for (const symptom of symptoms) {
+          const rel = await pullRelated(symptom);
+          relatedArray.push(rel);
+        }
+        setRelated(relatedArray.flat());
+      } catch (error) {
+        console.error('Error fetching related information:', error);
+      }
+    };
+
+    if (symptoms.length > 0) {
+      fetchRelated();
+    }
+  }, [symptoms]);
+
+  useEffect(() => {
+    const logDiagnosisProbabilities = (responseTexts) => {
+      try {
+        const queryPattern = /Query:\n"([^"]+)"/;
+        const assumptionPattern = /Assumption[^:]*:\n([\s\S]*?)(?:\n\n|$)/;
+        const linkPattern = /Wolfram\|Alpha website result for "([^"]+)":\n(\S+)/;
+        const resultPattern = /diagnosis\s*\|\s*drug\s*\|\s*male\s*\|\s*female\s*\|\s*all[\s\S]*?((?:[^\n]+\n)+)/;
+
+        const results = responseTexts.map((text) => {
+          const query = text.match(queryPattern)?.[1] || 'No query found';
+          const assumption = text.match(assumptionPattern)?.[1]?.trim() || 'No assumption found';
+          const wolframAlphaLink = text.match(linkPattern)?.[2] || 'No link found';
+          const resultLines = text.match(resultPattern)?.[1]?.trim().split('\n').map(line => line.trim()) || [];
+
+          const parsedResults = resultLines.map(line => {
+            const [diagnosis, drug, male, female, all] = line.split('|').map(item => item.trim());
+            return { diagnosis, drug, male, female, all };
+          });
+
+          return {
+            query,
+            assumption,
+            wolfram_alpha_link: wolframAlphaLink,
+            results: parsedResults,
+          };
+        });
+
+        setRelatedFinal(results);
+      } catch (e) {
+        console.error('Error parsing diagnosis probabilities:', e);
+      }
+    };
+
+    if (related.length > 0) {
+      logDiagnosisProbabilities(related);
+    }
+  }, [related]);
+
+  const pullRelated = async (symptom) => {
+    try {
+      const response = await fetch('http://localhost:3000/related', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: symptom }),
+      });
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching related information:', error);
+      return [];
+    }
+  };
+
   const startRecording = async () => {
+    setTranscript('');
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorderRef.current = new MediaRecorder(stream);
     mediaRecorderRef.current.ondataavailable = (event) => {
@@ -26,13 +134,18 @@ const AudioRecorder = () => {
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
       audioChunksRef.current = [];
       setAudioBlob(audioBlob);
+      setIsLoading(true);
 
       try {
         const transcript = await transcribeAudio(audioBlob);
         const formattedTranscript = await splitTranscript(transcript);
         setTranscript(formattedTranscript);
+        setSummary(await summarizeTranscript(formattedTranscript));
+        setFullSummary(await(summarize(formattedTranscript)))
       } catch (error) {
         console.error('Error processing audio:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -47,7 +160,7 @@ const AudioRecorder = () => {
           'Content-Type': 'audio/wav',
           'Authorization': `Token d27deb12027a5ec2bb9d506957eb16789f9e1918`,
         },
-        body: audioBlob
+        body: audioBlob,
       });
 
       if (!response.ok) {
@@ -62,22 +175,52 @@ const AudioRecorder = () => {
     }
   };
 
+  const summarizeTranscript = async (transcript) => {
+    try {
+      const response = await fetch('http://localhost:3000/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `Summarize this transcript in jot notes: ${transcript}, Speaker 1 is a doctor. make sure speaker is not said, and it's like real doctor notes. Return any medical advice/and or notes you think are necessary. Return your response only with the summary.`,
+        }),
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error summarizing transcript:', error);
+      return '';
+    }
+  };
+  const summarize = async (transcript) => {
+    try {
+      const response = await fetch('http://localhost:3000/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `Summarize this full transcript ${transcript}, Speaker 1 is a doctor. make sure speaker is not said, and it's like real doctor notes. Return any medical advice/and or notes you think are necessary. Return your response only with the summary.`,
+        }),
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error summarizing transcript:', error);
+      return '';
+    }
+  };
+
   const splitTranscript = async (transcript) => {
     try {
       const response = await fetch('http://localhost:3000/openai', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: `Split this transcript into two speakers and format it: ${transcript}` }),
       });
 
       if (!response.ok) {
         throw new Error('OpenAI API response was not ok.');
       }
-
       const data = await response.json();
-      return formatTranscript(data || '');
+      return formatTranscript(data.message || '');
     } catch (error) {
       console.error('Error splitting transcript:', error);
       return '';
@@ -85,81 +228,125 @@ const AudioRecorder = () => {
   };
 
   const formatTranscript = (transcript) => {
-    // Remove any asterisks used for bold formatting
     let cleanedTranscript = transcript.replace(/\*\*/g, '');
-
-    // Remove any ending GPT response formatting
     const endPattern = /Certainly! Here is the formatted transcript split into two speakers: .*/;
     cleanedTranscript = cleanedTranscript.replace(endPattern, '').trim();
-
-    // Split transcript into lines
-    const lines = cleanedTranscript.split('\n');
-
-    // Filter lines that start with "Speaker 1:" or "Speaker 2:"
-    const filteredLines = lines.filter(line => line.startsWith('Speaker 1:') || line.startsWith('Speaker 2:'));
-
-    // Join the filtered lines back into a single string
-    const filteredTranscript = filteredLines.join('\n');
-
-    // Replace "Speaker 1:" and "Speaker 2:" with HTML <strong> tags for bold formatting
-    const formattedTranscript = filteredTranscript
-        .replace(/Speaker 1:/g, '<strong>Speaker 1:</strong> ')
-        .replace(/Speaker 2:/g, '\n<strong>Speaker 2:</strong> ');
-
-    return formattedTranscript;
-};
+    return cleanedTranscript;
+  };
 
   const handleButtonClick = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
+    isRecording ? stopRecording() : startRecording();
   };
 
-  const arrayBufferToBase64 = (buffer) => {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-  };
-
-  const downloadPdfWithAudio = async () => {
+  const downloadPdf = async () => {
     if (!audioBlob) return;
-
+  
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 400]);
+    let page = pdfDoc.addPage([600, 1000]);
     const { width, height } = page.getSize();
+    const fontSize = 14;
+    const lineHeight = fontSize * 1.2;
+    let yPosition = height - 50;
+  
+    const addNewPage = () => {
+      page = pdfDoc.addPage([600, 1000]);
+      yPosition = height - 50;
+    };
+  
+    // Helper function to handle yPosition and page breaks
+    const checkForPageBreak = (additionalHeight) => {
+      if (yPosition - additionalHeight < 50) {
+        addNewPage();
+      }
+    };
+  
+    // Draw patient information
+    page.drawText('Patient Information - Dr Khangura', { x: 50, y: yPosition, size: 18, color: rgb(0, 0, 0) });
+    yPosition -= 30;
+    page.drawText(`ID: ${patientId}`, { x: 50, y: yPosition, size: fontSize, color: rgb(0, 0, 0) });
+    yPosition -= lineHeight;
+    page.drawText(`Name: ${patientName}`, { x: 50, y: yPosition, size: fontSize, color: rgb(0, 0, 0) });
+    yPosition -= lineHeight;
+    page.drawText(`DOB: ${patientDob}`, { x: 50, y: yPosition, size: fontSize, color: rgb(0, 0, 0) });
+    yPosition -= 40;
+  
 
-    page.drawText('Patient Information', { x: 50, y: height - 50, size: 18, color: rgb(0, 0, 0) });
-    page.drawText(`Name: ${patientName}`, { x: 50, y: height - 100, size: 14, color: rgb(0, 0, 0) });
-    page.drawText(`DOB: ${patientDob}`, { x: 50, y: height - 130, size: 14, color: rgb(0, 0, 0) });
+  
+    // Draw full summary
+    if (fullSummary.message && fullSummary.message.trim() !== '') {
+      const summaryLines = fullSummary.message.split('\n');
+      yPosition -= lineHeight;
+      page.drawText('Summary:', { x: 50, y: yPosition + 20, size: 18, color: rgb(0, 0, 0) });
 
-    if (transcript) {
-      page.drawText(`Transcript: ${transcript}`, { x: 50, y: height - 160, size: 14, color: rgb(0, 0, 0) });
+      summaryLines.forEach((line) => {
+        checkForPageBreak(lineHeight);
+        page.drawText(line, {
+          x: 50,
+          y: yPosition,
+          size: fontSize,
+          color: rgb(0, 0, 0),
+          maxWidth: 500,
+          lineHeight: lineHeight,
+        });
+        yPosition -= lineHeight;
+      });
     }
-
-    const audioArrayBuffer = await audioBlob.arrayBuffer();
-    const audioBase64 = arrayBufferToBase64(audioArrayBuffer);
-    const audioUrl = `data:audio/wav;base64,${audioBase64}`;
-
+    yPosition -= 100;
+    // Draw additional notes (summary)
+    if (summary.message && summary.message.trim() !== '') {
+      checkForPageBreak(100);
+      page.drawText('Notes:', { x: 50, y: yPosition, size: 18, color: rgb(0, 0, 0) });
+      yPosition -= lineHeight;
+  
+      const summaryLines = summary.message.split('\n');
+      summaryLines.forEach((line) => {
+        checkForPageBreak(lineHeight);
+        page.drawText(line, { x: 50, y: yPosition, size: fontSize, color: rgb(0, 0, 0) });
+        yPosition -= lineHeight;
+      });
+    }
+  
+    // Add image at the bottom
+    const imagePath = '/image.png'; // Path to the image in the public directory
+    const response = await fetch(imagePath);
+    const arrayBuffer = await response.arrayBuffer();
+  
+    const pngImage = await pdfDoc.embedPng(arrayBuffer);
+    const pngDims = pngImage.scale(0.5);
+  
+    // Check if we need to add a new page based on image height
+    checkForPageBreak(pngDims.height + 50);
+  
+    // Draw the image on the page
+    page.drawImage(pngImage, {
+      x: 50,
+      y: yPosition - pngDims.height - 20,
+      width: pngDims.width,
+      height: pngDims.height,
+    });
+  
     const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const pdfUrl = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = pdfUrl;
-    a.download = 'patient_info.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }));
+    link.download = `${patientName}_Patient_Report.pdf`;
+    link.click();
   };
+
+
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
       <h1 className="text-2xl font-bold mb-4">Record Patient Information</h1>
+
+      <label htmlFor="patient-id" className="block text-lg font-medium mb-2">Patient ID:</label>
+      <input
+        type="text"
+        id="patient-id"
+        value={patientId}
+        onChange={(e) => setPatientId(e.target.value)}
+        placeholder="Enter patient ID"
+        className="w-full p-2 border border-gray-300 rounded-md"
+      /><br /><br />
 
       <label htmlFor="patient-name" className="block text-lg font-medium mb-2">Patient Name:</label>
       <input
@@ -182,29 +369,30 @@ const AudioRecorder = () => {
 
       <button
         onClick={handleButtonClick}
-        className={`px-4 py-2 text-white font-bold rounded-md ${
-          isRecording ? 'bg-red-500' : 'bg-blue-500'
-        }`}
+        className={`px-4 py-2 text-white font-bold rounded-md ${isRecording ? 'bg-red-500' : 'bg-blue-500'}`}
       >
         {isRecording ? 'Stop Recording' : 'Start Recording'}
       </button>
 
-      {audioBlob && (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">Recorded Audio Ready</h3>
-          <button
-            onClick={downloadPdfWithAudio}
-            className="mt-2 px-4 py-2 text-white bg-green-500 rounded-md"
-          >
-            Download PDF with Audio
-          </button>
+      {isLoading && (
+        <div className="mt-4 p-4 border border-gray-300 rounded-md text-center">
+          <div className="ellipsis">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+          <p className="text-lg font-semibold mt-2">Processing</p>
         </div>
       )}
-
-      {transcript && (
+      {summary && !isLoading && (
         <div className="mt-4">
-          <h3 className="text-lg font-semibold">Transcript</h3>
-          <p dangerouslySetInnerHTML={{ __html: transcript }}></p>
+          <h3 className="text-lg font-semibold">Summary Ready</h3>
+          <button
+            onClick={downloadPdf}
+            className="mt-2 px-4 py-2 text-white bg-green-500 rounded-md"
+          >
+            Download PDF
+          </button>
         </div>
       )}
     </div>

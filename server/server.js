@@ -1,7 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const { OpenAI } = require('openai'); // Ensure this is the correct import
+const axios = require('axios'); // Correct import for axios
+const { OpenAI } = require('openai');
 
 dotenv.config();
 
@@ -18,8 +19,67 @@ app.use(cors());
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
+app.post('/related', async (req, res) => {
+  const { input } = req.body;
+  const appId = '645P2V-P8QPTUWKGA'; 
+  const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${appId}&input=${input}+Drugs+related+to+diagnoses`; // Encode input to prevent issues
+
+  try {
+    const response = await axios.post(url);
+    console.log(response.data)
+
+    return res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error:', error.response ? error.response.data : error.message);
+    res.status(error.response ? error.response.status : 500).json({ error: error.message });
+  }
+});
+
+
+app.post('/symptoms', async (req, res) => {
+    const { prompt } = req.body;
+    console.log(prompt);
+  
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+  
+    try {
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o', // Correct model identifier
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 2000,
+        temperature: 0.7
+      });
+  
+      // Access the first choice's message content
+      const messageContent = response.choices[0].message.content;
+  
+      // Parse the message content to extract symptoms
+      const symptoms = extractSymptoms(messageContent);
+  
+      res.status(200).json({ symptoms }); // Return as JSON object
+    } catch (error) {
+      console.error('Error:', error.response ? error.response.data : error.message);
+      res.status(error.response ? error.response.status : 500).json({ error: error.message });
+    }
+  });
+  
+  // Function to extract symptoms from the model's response
+  function extractSymptoms(text) {
+    // Example extraction logic
+    // This assumes symptoms are listed as bullet points or newline-separated
+    return text.split('\n').filter(line => line.trim() !== '');
+  }
+
 app.post('/openai', async (req, res) => {
   const { prompt } = req.body;
+  console.log(prompt);
 
   if (!prompt) {
     return res.status(400).json({ error: 'Prompt is required' });
@@ -40,12 +100,11 @@ app.post('/openai', async (req, res) => {
 
     // Access the first choice's message content
     const messageContent = response.choices[0].message.content;
-    
-    console.log(messageContent);
-    res.status(200).json(messageContent);
+
+    res.status(200).json({ message: messageContent }); // Return as JSON object
   } catch (error) {
     console.error('Error:', error.response ? error.response.data : error.message);
-    res.status(500).json({ error: error.message || 'Internal Server Error' });
+    res.status(error.response ? error.response.status : 500).json({ error: error.message });
   }
 });
 
