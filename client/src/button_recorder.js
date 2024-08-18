@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { PDFDocument, rgb } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 import jsPDF from 'jspdf';
 
 const AudioRecorder = () => {
@@ -38,25 +38,37 @@ const AudioRecorder = () => {
     }
   };
 
+  const uploadAudioFile = async (blob) => {
+    // Implement your file upload logic here.
+    // Return the public URL of the uploaded file.
+    // Example: return 'https://example.com/path/to/your/audio.wav';
+  };
+
   const downloadPdfWithAudio = async () => {
     if (!audioBlob) return;
   
-    // Convert audio to a Blob URL
-    const audioUrl = URL.createObjectURL(audioBlob);
+    // Convert audio blob to Base64 string
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result.split(',')[1];
+      const audioDataUrl = `data:audio/wav;base64,${base64String}`;
   
-    // Create a new jsPDF document
-    const pdfDoc = new jsPDF();
+      // Create a new jsPDF document
+      const pdfDoc = new jsPDF();
   
-    // Add patient information text
-    pdfDoc.text('Patient Information', 20, 20);
-    pdfDoc.text(`Name: ${patientName}`, 20, 30);
-    pdfDoc.text(`DOB: ${patientDob}`, 20, 40);
+      // Add patient information text
+      pdfDoc.text('Patient Information', 20, 20);
+      pdfDoc.text(`Name: ${patientName}`, 20, 30);
+      pdfDoc.text(`DOB: ${patientDob}`, 20, 40);
   
-    // Add a clickable link to the PDF that uses the Blob URL
-    pdfDoc.textWithLink('Click to listen to the recorded audio', 20, 60, { url: audioUrl });
+      // Add a clickable link to the PDF that uses the data URL
+      pdfDoc.textWithLink('Click to listen to the recorded audio', 20, 60, { url: audioDataUrl });
   
-    // Save the PDF and trigger download
-    pdfDoc.save('patient_info.pdf');
+      // Save the PDF and trigger download
+      pdfDoc.save('patient_info.pdf');
+    };
+  
+    reader.readAsDataURL(audioBlob);
   };
   
 
