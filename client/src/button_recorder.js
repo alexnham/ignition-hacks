@@ -40,25 +40,26 @@ const AudioRecorder = () => {
 
   const downloadPdfWithAudio = async () => {
     if (!audioBlob) return;
-  
+    // const audioUrl = URL.createObjectURL(audioBlob);
+
     // Convert audio to a Blob URL
     const audioUrl = URL.createObjectURL(audioBlob);
-  
+    console.log(audioUrl)
     // Create a new jsPDF document
     const pdfDoc = new jsPDF();
-  
+
     // Add patient information text
     pdfDoc.text('Patient Information', 20, 20);
     pdfDoc.text(`Name: ${patientName}`, 20, 30);
     pdfDoc.text(`DOB: ${patientDob}`, 20, 40);
-  
+
     // Add a clickable link to the PDF that uses the Blob URL
     pdfDoc.textWithLink('Click to listen to the recorded audio', 20, 60, { url: audioUrl });
-  
+
     // Save the PDF and trigger download
     pdfDoc.save('patient_info.pdf');
   };
-  
+
 
   return (
     <div>
@@ -88,7 +89,7 @@ const AudioRecorder = () => {
       {audioBlob && (
         <div>
           <h3>Recorded Audio Ready</h3>
-          
+
           {/* Audio Player */}
           <audio controls>
             <source src={URL.createObjectURL(audioBlob)} type="audio/wav" />
