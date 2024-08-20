@@ -12,10 +12,7 @@ const AudioRecorder = () => {
   const [transcript, setTranscript] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState('');
-  const [symptoms, setSymptoms] = useState([]);
-  const [related, setRelated] = useState([]);
   const [fullSummary, setFullSummary] = useState('')
-  const [relatedFinal, setRelatedFinal] = useState([]);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
