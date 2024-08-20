@@ -3,11 +3,11 @@
 
 ## To Do List
 
-    - Login
-    - Database to store clients
-    - Cleanup PDF
-    - Organize Client data
-    - Adjustable Notes before pdf
+    - Login <- Thomas
+    - Database to store clients <- Thomas
+    - Cleanup PDF <- Jug
+    - Organize Client data <- Thomas
+    - Adjustable Notes before pdf <- Alex
 
 ## Inspiration
 Doctors are heroes. Their lives are fast-paced and action-packed, from delivering new lives to saving them. But have you ever heard of a hero who has to do paperwork after a battle? Neither have we. However, what many people don’t realize is that doctors spend hours each day documenting patient interactions to keep records up-to-date. This is problematic for several reasons. Doctors often see 2-4 patients back-to-back before sitting down to write notes, which means they might forget parts of the consultation and risk omitting important details. Additionally, doctors need short breaks during the day to mentally recharge, but instead, they spend their "free time" filling out notes. Most importantly, the time doctors spend on documentation takes away from time they could be spending with patients, providing care and being the heroes they are.
