@@ -1,7 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { PDFDocument, rgb } from 'pdf-lib';
-import fs from 'fs';
-import path from 'path';
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -9,7 +7,6 @@ const AudioRecorder = () => {
   const [patientName, setPatientName] = useState('');
   const [patientDob, setPatientDob] = useState('');
   const [audioBlob, setAudioBlob] = useState(null);
-  const [transcript, setTranscript] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState('');
   const [fullSummary, setFullSummary] = useState('')
@@ -18,7 +15,6 @@ const AudioRecorder = () => {
 
   
   const startRecording = async () => {
-    setTranscript('');
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorderRef.current = new MediaRecorder(stream);
     mediaRecorderRef.current.ondataavailable = (event) => {
@@ -39,7 +35,6 @@ const AudioRecorder = () => {
       try {
         const transcript = await transcribeAudio(audioBlob);
         const formattedTranscript = await splitTranscript(transcript);
-        setTranscript(formattedTranscript);
         setSummary(await summarizeTranscript(formattedTranscript));
         setFullSummary(await(summarize(formattedTranscript)))
       } catch (error) {
