@@ -20,8 +20,6 @@ app.use(cors());
 app.use(express.json());
 
 
-
-
 app.post('/symptoms', async (req, res) => {
     const { prompt } = req.body;
     console.log(prompt);
