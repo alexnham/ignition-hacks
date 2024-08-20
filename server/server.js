@@ -19,21 +19,7 @@ app.use(cors());
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
-app.post('/related', async (req, res) => {
-  const { input } = req.body;
-  const appId = '645P2V-P8QPTUWKGA'; 
-  const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${appId}&input=${input}+Drugs+related+to+diagnoses`; // Encode input to prevent issues
 
-  try {
-    const response = await axios.post(url);
-    console.log(response.data)
-
-    return res.status(200).json(response.data);
-  } catch (error) {
-    console.error('Error:', error.response ? error.response.data : error.message);
-    res.status(error.response ? error.response.status : 500).json({ error: error.message });
-  }
-});
 
 
 app.post('/symptoms', async (req, res) => {

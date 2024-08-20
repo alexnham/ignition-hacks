@@ -19,104 +19,7 @@ const AudioRecorder = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  useEffect(() => {
-    const fetchSymptoms = async () => {
-      try {
-        if (summary) {
-          const response = await fetch('http://localhost:3000/symptoms', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              prompt: `${summary.message}, based on this summary, what are the symptoms of the patient, describe each symptom with ONE WORD and in an array`,
-            }),
-          });
-          const json = await response.json();
-          const data = JSON.parse(json.symptoms);
-          if (Array.isArray(data)) {
-            setSymptoms(data);
-          } else {
-            console.error('Data is not an array');
-          }
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
-    fetchSymptoms();
-  }, [summary]);
-
-  useEffect(() => {
-    const fetchRelated = async () => {
-      try {
-        const relatedArray = [];
-        for (const symptom of symptoms) {
-          const rel = await pullRelated(symptom);
-          relatedArray.push(rel);
-        }
-        setRelated(relatedArray.flat());
-      } catch (error) {
-        console.error('Error fetching related information:', error);
-      }
-    };
-
-    if (symptoms.length > 0) {
-      fetchRelated();
-    }
-  }, [symptoms]);
-
-  useEffect(() => {
-    const logDiagnosisProbabilities = (responseTexts) => {
-      try {
-        const queryPattern = /Query:\n"([^"]+)"/;
-        const assumptionPattern = /Assumption[^:]*:\n([\s\S]*?)(?:\n\n|$)/;
-        const linkPattern = /Wolfram\|Alpha website result for "([^"]+)":\n(\S+)/;
-        const resultPattern = /diagnosis\s*\|\s*drug\s*\|\s*male\s*\|\s*female\s*\|\s*all[\s\S]*?((?:[^\n]+\n)+)/;
-
-        const results = responseTexts.map((text) => {
-          const query = text.match(queryPattern)?.[1] || 'No query found';
-          const assumption = text.match(assumptionPattern)?.[1]?.trim() || 'No assumption found';
-          const wolframAlphaLink = text.match(linkPattern)?.[2] || 'No link found';
-          const resultLines = text.match(resultPattern)?.[1]?.trim().split('\n').map(line => line.trim()) || [];
-
-          const parsedResults = resultLines.map(line => {
-            const [diagnosis, drug, male, female, all] = line.split('|').map(item => item.trim());
-            return { diagnosis, drug, male, female, all };
-          });
-
-          return {
-            query,
-            assumption,
-            wolfram_alpha_link: wolframAlphaLink,
-            results: parsedResults,
-          };
-        });
-
-        setRelatedFinal(results);
-      } catch (e) {
-        console.error('Error parsing diagnosis probabilities:', e);
-      }
-    };
-
-    if (related.length > 0) {
-      logDiagnosisProbabilities(related);
-    }
-  }, [related]);
-
-  const pullRelated = async (symptom) => {
-    try {
-      const response = await fetch('http://localhost:3000/related', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: symptom }),
-      });
-      return response.json();
-    } catch (error) {
-      console.error('Error fetching related information:', error);
-      return [];
-    }
-  };
-
+  
   const startRecording = async () => {
     setTranscript('');
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -271,7 +174,6 @@ const AudioRecorder = () => {
     yPosition -= 40;
   
 
-  
     // Draw full summary
     if (fullSummary.message && fullSummary.message.trim() !== '') {
       const summaryLines = fullSummary.message.split('\n');
@@ -305,25 +207,6 @@ const AudioRecorder = () => {
         yPosition -= lineHeight;
       });
     }
-  
-    // Add image at the bottom
-    /*const imagePath = '/image.png'; // Path to the image in the public directory
-    const response = await fetch(imagePath);
-    const arrayBuffer = await response.arrayBuffer();
-  
-    const pngImage = await pdfDoc.embedPng(arrayBuffer);
-    const pngDims = pngImage.scale(0.5);
-  
-    // Check if we need to add a new page based on image height
-    checkForPageBreak(pngDims.height + 50);
-  
-    // Draw the image on the page
-    page.drawImage(pngImage, {
-      x: 50,
-      y: yPosition - pngDims.height - 20,
-      width: pngDims.width,
-      height: pngDims.height,
-    });*/
   
     const pdfBytes = await pdfDoc.save();
     const link = document.createElement('a');
