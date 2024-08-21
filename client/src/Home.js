@@ -1,8 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { PencilSquareIcon } from '@heroicons/react/24/outline'; // Import a cool icon
+import { useNavigate } from 'react-router-dom';
 
 const AudioRecorder = () => {
+  const [patients, setPatients] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [patientId, setPatientId] = useState('');
   const [patientName, setPatientName] = useState('');
@@ -13,11 +15,25 @@ const AudioRecorder = () => {
   const [fullSummary, setFullSummary] = useState('')
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const navigate = useNavigate();
 
-  <h1 className='text-xl absolute top-10 left-10'>Logged In As: Dr. Khangura</h1>
-  {/* Add the cool logo */}
-  <PencilSquareIcon className="h-16 w-16 text-blue-500 mb-6" />
-  
+  const goToPatients = () => {
+    navigate("/patients");
+  }
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      const response = await fetch('http://localhost:4000/api/patients')
+      const json = await response.json();
+
+      if (response.ok) {
+        setPatients(json);
+      }
+    }
+
+    fetchPatients();
+  }, [])
+
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorderRef.current = new MediaRecorder(stream);
@@ -40,7 +56,7 @@ const AudioRecorder = () => {
         const transcript = await transcribeAudio(audioBlob);
         const formattedTranscript = await splitTranscript(transcript);
         setSummary(await summarizeTranscript(formattedTranscript));
-        setFullSummary(await(summarize(formattedTranscript)))
+        setFullSummary(await (summarize(formattedTranscript)))
       } catch (error) {
         console.error('Error processing audio:', error);
       } finally {
@@ -76,7 +92,7 @@ const AudioRecorder = () => {
 
   const summarizeTranscript = async (transcript) => {
     try {
-      const response = await fetch('http://localhost:3000/openai', {
+      const response = await fetch('http://localhost:4000/openai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -92,7 +108,7 @@ const AudioRecorder = () => {
   };
   const summarize = async (transcript) => {
     try {
-      const response = await fetch('http://localhost:3000/openai', {
+      const response = await fetch('http://localhost:4000/openai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -109,7 +125,7 @@ const AudioRecorder = () => {
 
   const splitTranscript = async (transcript) => {
     try {
-      const response = await fetch('http://localhost:3000/openai', {
+      const response = await fetch('http://localhost:4000/openai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: `Split this transcript into two speakers and format it: ${transcript}` }),
@@ -139,26 +155,26 @@ const AudioRecorder = () => {
 
   const downloadPdf = async () => {
     if (!audioBlob) return;
-  
+
     const pdfDoc = await PDFDocument.create();
     let page = pdfDoc.addPage([600, 1000]);
     const { width, height } = page.getSize();
     const fontSize = 14;
     const lineHeight = fontSize * 1.2;
     let yPosition = height - 50;
-  
+
     const addNewPage = () => {
       page = pdfDoc.addPage([600, 1000]);
       yPosition = height - 50;
     };
-  
+
     // Helper function to handle yPosition and page breaks
     const checkForPageBreak = (additionalHeight) => {
       if (yPosition - additionalHeight < 50) {
         addNewPage();
       }
     };
-  
+
     // Draw patient information
     page.drawText('Patient Information - Dr Khangura', { x: 50, y: yPosition, size: 18, color: rgb(0, 0, 0) });
     yPosition -= 30;
@@ -168,7 +184,7 @@ const AudioRecorder = () => {
     yPosition -= lineHeight;
     page.drawText(`DOB: ${patientDob}`, { x: 50, y: yPosition, size: fontSize, color: rgb(0, 0, 0) });
     yPosition -= 40;
-  
+
 
     // Draw full summary
     if (fullSummary.message && fullSummary.message.trim() !== '') {
@@ -195,7 +211,7 @@ const AudioRecorder = () => {
       checkForPageBreak(100);
       page.drawText('Notes:', { x: 50, y: yPosition, size: 18, color: rgb(0, 0, 0) });
       yPosition -= lineHeight;
-  
+
       const summaryLines = summary.message.split('\n');
       summaryLines.forEach((line) => {
         checkForPageBreak(lineHeight);
@@ -203,7 +219,7 @@ const AudioRecorder = () => {
         yPosition -= lineHeight;
       });
     }
-  
+
     const pdfBytes = await pdfDoc.save();
     const link = document.createElement('a');
     link.href = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }));
@@ -214,66 +230,81 @@ const AudioRecorder = () => {
 
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
-      <h1 className="text-2xl font-bold mb-4">Record Patient Information</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4" >
+      <h1 className='text-xl absolute top-10 left-10'>Logged In As: Dr. Khangura</h1>
+      {/* Add the cool logo */}
+      <div className="flex justify-center mb-6">
+        <PencilSquareIcon className="h-16 w-16 text-blue-500" />
+      </div>
 
-      <label htmlFor="patient-id" className="block text-lg font-medium mb-2">Patient ID:</label>
-      <input
-        type="text"
-        id="patient-id"
-        value={patientId}
-        onChange={(e) => setPatientId(e.target.value)}
-        placeholder="Enter patient ID"
-        className="w-full p-2 border border-gray-300 rounded-md"
-      /><br /><br />
+      <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
 
-      <label htmlFor="patient-name" className="block text-lg font-medium mb-2">Patient Name:</label>
-      <input
-        type="text"
-        id="patient-name"
-        value={patientName}
-        onChange={(e) => setPatientName(e.target.value)}
-        placeholder="Enter patient name"
-        className="w-full p-2 border border-gray-300 rounded-md"
-      /><br /><br />
+        <h1 className="text-2xl font-bold mb-4">Record Patient Information</h1>
 
-      <label htmlFor="patient-dob" className="block text-lg font-medium mb-2">Patient Date of Birth:</label>
-      <input
-        type="date"
-        id="patient-dob"
-        value={patientDob}
-        onChange={(e) => setPatientDob(e.target.value)}
-        className="w-full p-2 border border-gray-300 rounded-md"
-      /><br /><br />
+        <label htmlFor="patient-id" className="block text-lg font-medium mb-2">Patient ID:</label>
+        <input
+          type="text"
+          id="patient-id"
+          value={patientId}
+          onChange={(e) => setPatientId(e.target.value)}
+          placeholder="Enter patient ID"
+          className="w-full p-2 border border-gray-300 rounded-md"
+        /><br /><br />
 
-      <button
-        onClick={handleButtonClick}
-        className={`px-4 py-2 text-white font-bold rounded-md ${isRecording ? 'bg-red-500' : 'bg-blue-500'}`}
-      >
-        {isRecording ? 'Stop Recording' : 'Start Recording'}
-      </button>
+        <label htmlFor="patient-name" className="block text-lg font-medium mb-2">Patient Name:</label>
+        <input
+          type="text"
+          id="patient-name"
+          value={patientName}
+          onChange={(e) => setPatientName(e.target.value)}
+          placeholder="Enter patient name"
+          className="w-full p-2 border border-gray-300 rounded-md"
+        /><br /><br />
 
-      {isLoading && (
-        <div className="mt-4 p-4 border border-gray-300 rounded-md text-center">
-          <div className="ellipsis">
-            <div></div>
-            <div></div>
-            <div></div>
+        <label htmlFor="patient-dob" className="block text-lg font-medium mb-2">Patient Date of Birth:</label>
+        <input
+          type="date"
+          id="patient-dob"
+          value={patientDob}
+          onChange={(e) => setPatientDob(e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded-md"
+        /><br /><br />
+
+        <button
+          onClick={handleButtonClick}
+          className={`px-4 py-2 text-white font-bold rounded-md ${isRecording ? 'bg-red-500' : 'bg-blue-500'}`}
+        >
+          {isRecording ? 'Stop Recording' : 'Start Recording'}
+        </button>
+
+        {isLoading && (
+          <div className="mt-4 p-4 border border-gray-300 rounded-md text-center">
+            <div className="ellipsis">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+            <p className="text-lg font-semibold mt-2">Processing</p>
           </div>
-          <p className="text-lg font-semibold mt-2">Processing</p>
-        </div>
-      )}
-      {summary && !isLoading && (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">Summary Ready</h3>
-          <button
-            onClick={downloadPdf}
-            className="mt-2 px-4 py-2 text-white bg-green-500 rounded-md"
-          >
-            Download PDF
-          </button>
-        </div>
-      )}
+        )}
+        {summary && !isLoading && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold">Summary Ready</h3>
+            <button
+              onClick={downloadPdf}
+              className="mt-2 px-4 py-2 text-white bg-green-500 rounded-md"
+            >
+              Download PDF
+            </button>
+          </div>
+        )}
+      </div>
+      <button
+        onClick={goToPatients} // Use the function to navigate
+        className="mt-4 px-4 py-2 text-white bg-blue-500 rounded-md"
+      >
+        Go to Patients
+      </button>
     </div>
   );
 };

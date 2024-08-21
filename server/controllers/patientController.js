@@ -4,8 +4,13 @@ const mongoose = require('mongoose')
 // GET all patients
 const getPatients = async (req, res) => {
   try {
-    const patients = await Patient.find({}).sort({ createdAt: -1 }) // to filter, put the key and the value pair inside the find (Patient.find({key: value}))
-
+    // Newest one first
+    const patients = await Patient.find({}) // to filter, put the key and the value pair inside the find (Patient.find({key: value}))
+      .sort({
+        preferredName: 1,       // Sort by preferredName alphabetically
+        dateOfBirth: 1,          // If preferredName is the same, sort by dateOfBirth
+        updatedAt: -1          // If preferredName and dateOfBirth are the same, sort by dateUpdated (most recent first)
+      });
     res.status(200).json(patients)
 
   } catch (error) {

@@ -12,8 +12,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 
 
 // Enable CORS for all origins
@@ -48,7 +49,7 @@ app.post('/symptoms', async (req, res) => {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o', // Correct model identifier
+      model: 'gpt-4', // Correct model identifier
       messages: [
         {
           role: 'user',
@@ -89,7 +90,7 @@ app.post('/openai', async (req, res) => {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o', // Correct model identifier
+      model: 'gpt-4', // Correct model identifier
       messages: [
         {
           role: 'user',

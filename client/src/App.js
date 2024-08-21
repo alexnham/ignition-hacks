@@ -1,18 +1,19 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import AudioRecorder from './button_recorder';
+import AudioRecorder from './Home';
+import Patients from './Patients';
 import { PencilSquareIcon } from '@heroicons/react/24/outline'; // Import a cool icon
 
 
 function App() {
   return (
-    <div className="App flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+    <div className="App">
       <BrowserRouter>
-        {/* Add the AudioRecorder component */}
         <div className="pages">
           <Routes>
+            {/* Add the AudioRecorder component */}
             <Route path="/" element={<AudioRecorder />} />
-            
+            <Route path="/patients" element={<Patients />} />
           </Routes>
         </div>
       </BrowserRouter>
