@@ -30,6 +30,10 @@ const patientSchema = new Schema({
     type: String,
     required: true
   },
+  dateOfBirth: {
+    type: Date, // YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DD
+    required: true // You can adjust this based on your needs
+  },
   email: {
     type: String,
     required: false,

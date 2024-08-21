@@ -4,6 +4,8 @@ const {
   getPatients,
   getPatient,
   createPatient,
+  deletePatient,
+  updatePatient,
 } = require('../controllers/patientController.js')
 
 const router = express.Router()
@@ -18,14 +20,10 @@ router.get('/:id', getPatient);
 router.post('/', createPatient)
 
 // DELETE an existing patient
-router.delete('/:id', (req, res) => {
-  res.json({ msgs: 'DELETE an existing patient' })
-})
+router.delete('/:id', deletePatient)
 
 // UPDATE an existing patient
-router.patch('/:id', (req, res) => {
-  res.json({ msgs: 'UPDATE an existing patient' })
-})
+router.patch('/:id', updatePatient)
 
 
 module.exports = router;

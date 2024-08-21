@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { PDFDocument, rgb } from 'pdf-lib';
+import { PencilSquareIcon } from '@heroicons/react/24/outline'; // Import a cool icon
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -13,6 +14,9 @@ const AudioRecorder = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
+  <h1 className='text-xl absolute top-10 left-10'>Logged In As: Dr. Khangura</h1>
+  {/* Add the cool logo */}
+  <PencilSquareIcon className="h-16 w-16 text-blue-500 mb-6" />
   
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
