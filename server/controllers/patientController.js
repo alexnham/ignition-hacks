@@ -2,21 +2,36 @@ const Patient = require('../models/patientModel.js')
 const mongoose = require('mongoose')
 
 // GET all patients
+// In patientController.js
 const getPatients = async (req, res) => {
-  try {
-    // Newest one first
-    const patients = await Patient.find({}) // to filter, put the key and the value pair inside the find (Patient.find({key: value}))
-      .sort({
-        preferredName: 1,       // Sort by preferredName alphabetically
-        dateOfBirth: 1,          // If preferredName is the same, sort by dateOfBirth
-        updatedAt: -1          // If preferredName and dateOfBirth are the same, sort by dateUpdated (most recent first)
-      });
-    res.status(200).json(patients)
+  const { healthcareID } = req.query;
 
+  try {
+    if (healthcareID) {
+      // If healthcareID is provided, find the patient with that healthcareID
+      const patient = await Patient.findOne({ healthcareID: healthcareID });
+
+      if (!patient) {
+        return res.status(404).json({ error: 'Patient with this healthcareID not found' });
+      }
+
+      return res.status(200).json(patient);
+    } else {
+      // If no parameters are provided, return all patients
+      const patients = await Patient.find({})
+        .sort({
+          preferredName: 1,  // Sort by preferredName alphabetically
+          dateOfBirth: 1,    // Then by dateOfBirth
+          updatedAt: -1      // Most recent updates first
+        });
+
+      res.status(200).json(patients);
+    }
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
-}
+};
+
 
 
 // GET a single patient
@@ -41,15 +56,34 @@ const getPatient = async (req, res) => {
   }
 }
 
+/*
+// GET a patient by healthcareID
+const getPatientByHealthcareID = async (req, res) => {
+  const { healthcareID } = req.params;
+
+  try {
+    const patient = await Patient.findOne({ healthcareID: healthcareID });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient with this healthcareID not found' });
+    }
+
+    res.status(200).json(patient);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+*/
 
 // CREATE a new patient
 const createPatient = async (req, res) => {
   // console.log(req.body)
-  const { healthcareID, preferredName, dateOfBirth, email, phoneNumber } = req.body;
+  // const { healthcareID, preferredName, dateOfBirth, email, phoneNumber notes } = req.body;
 
   // Add doc to db
+  // console.log(req.body.healthcareID);
   try {
-    const patient = await Patient.create({ healthcareID, preferredName, dateOfBirth, email, phoneNumber });
+    const patient = await Patient.create({ ...req.body });
     res.status(200).json(patient);
   } catch (error) {
     res.status(400).json({ error: error.message })
