@@ -282,7 +282,8 @@ const AudioRecorder = () => {
             onChange={(e) => setPatientId(e.target.value)}
             placeholder="Enter patient ID"
             className="w-full p-2 border border-gray-300 rounded-md"
-          /><br /><br />
+          />
+          <br /><br />
 
           <label htmlFor="patient-name" className="block text-lg font-medium mb-2">Patient Name:</label>
           <input
@@ -292,7 +293,8 @@ const AudioRecorder = () => {
             onChange={(e) => setPatientName(e.target.value)}
             placeholder="Enter patient name"
             className="w-full p-2 border border-gray-300 rounded-md"
-          /><br /><br />
+          />
+          <br /><br />
 
           <label htmlFor="patient-dob" className="block text-lg font-medium mb-2">Patient Date of Birth:</label>
           <input
@@ -301,7 +303,8 @@ const AudioRecorder = () => {
             value={patientDob}
             onChange={(e) => setPatientDob(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded-md"
-          /><br /><br />
+          />
+          <br /><br />
 
           <button
             onClick={handleButtonClick}

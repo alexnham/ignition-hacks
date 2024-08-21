@@ -150,6 +150,7 @@ const updatePatient = async (req, res) => {
   }
 }
 
+
 module.exports = {
   getPatients,
   getPatient,
