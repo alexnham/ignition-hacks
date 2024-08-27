@@ -266,7 +266,7 @@ const AudioRecorder = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
       <h1 className='text-xl absolute top-10 left-10'>Logged In As: Dr. Khangura</h1>
 
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center absolute top-10 mb-6">
         <PencilSquareIcon className="h-16 w-16 text-blue-500" />
       </div>
 

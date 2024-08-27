@@ -23,13 +23,12 @@ const Patients = () => {
   return (
     <div className="patients flex flex-wrap gap-2 p-2">
       {patients && patients.map((patient) => (
-        <Link>
+        <Link to={`/patients/${patient._id}`} key={patient._id}>
           <PatientDetails key={patient._id} patient={patient} />
         </Link>
       ))}
     </div>
   )
-
 }
 
 export default Patients;
