@@ -221,9 +221,9 @@ const PatientPage = () => {
               <div className="mb-6">
                 <label className="block text-2xl font-semibold">Date of Birth:</label>
                 <input
-                  type="date"
+                  type="datetime-local"
                   name="dateOfBirth"
-                  value={formValues.dateOfBirth.slice(0, 10)}
+                  value={formValues.dateOfBirth}
                   onChange={handleChange}
                   className="mt-1 p-2 border border-gray-300 rounded w-full"
                 />
@@ -315,9 +315,9 @@ const PatientPage = () => {
               <h2 className="text-2xl font-semibold">Date of Birth:</h2>
               <p className="text-lg">
                 {new Date(patient.dateOfBirth).toLocaleString('en-US', {
-                  dateStyle: 'full',
-                  timeStyle: 'short',
-                  // timeZoneName: 'short',
+                  // dateStyle: 'full',
+                  // timeStyle: 'short',
+                  timeZoneName: 'longOffset',
                 })}
               </p>
             </div>
@@ -344,12 +344,12 @@ const PatientPage = () => {
               </div>
             )}
 
-            {patient.notes && (
+            {/* {patient.notes && ( */}
               <div className="mb-6">
                 <h2 className="text-2xl font-semibold">Notes:</h2>
-                <p className="text-lg break-words">{patient.notes}</p>
+                <p className="text-lg break-words">{patient.notes || 'Not provided'}</p>
               </div>
-            )}
+            {/* )} */}
 
             <div className="flex justify-between mt-8">
               <button

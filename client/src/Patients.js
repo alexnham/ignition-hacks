@@ -30,7 +30,7 @@ const Patients = () => {
       <button
         onClick={handleGoHome}
         className="px-8 py-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-2xl font-bold"
-        >Home
+      >Home
       </button>
 
       <div className="patients mt-12 flex flex-wrap gap-2"> {/* Add margin-top to provide space for the button */}

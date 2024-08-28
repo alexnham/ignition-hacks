@@ -10,18 +10,18 @@ const PatientDetails = ({ patient }) => {
       </p>
       <p className="text-gray-700 text-sm mb-1 truncate">
         <strong>Email: </strong>
-        {patient.email}
+        {patient.email || 'Not Provided'}
       </p>
       <p className="text-gray-700 text-sm mb-1 truncate">
         <strong>Phone Number: </strong>
-        {patient.phoneNumber}
+        {patient.phoneNumber || 'Not Provided'}
       </p>
       <p className="text-gray-700 text-sm mb-1 truncate">
         <strong>Date of Birth: </strong>
         {new Date(patient.dateOfBirth).toLocaleString('en-US', {
-          dateStyle: 'full',
-          timeStyle: 'short',
-          // timeZoneName: 'short',
+          // dateStyle: 'full',
+          // timeStyle: 'short',
+          timeZoneName: 'longOffset',
         })}
       </p>
       <p className="text-gray-700 text-sm overflow-hidden text-ellipsis whitespace-nowrap">

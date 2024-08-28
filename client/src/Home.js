@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { PencilSquareIcon } from '@heroicons/react/24/outline'; // Import a cool icon
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const AudioRecorder = () => {
   const [patients, setPatients] = useState(null);
@@ -353,35 +353,36 @@ const AudioRecorder = () => {
         </div>
 
         {patientDetails &&
-          <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
-            <h1 className="text-2xl font-bold mb-4">Patient Information</h1>
+          <Link to={`/patients/${patientDetails._id}`} key={patientDetails._id}>
+            <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
+              <h1 className="text-2xl font-bold mb-4">Patient Information</h1>
 
-            <label className="block text-lg font-medium mb-2">
-              <strong>Patient ID: </strong>
-              {patientDetails && patientDetails.healthcareID}
-            </label>
-            <label className="block text-lg font-medium mb-2">
-              <strong>Patient Name: </strong>
-              {patientDetails && patientDetails.preferredName}
-            </label>
-            <label className="block text-lg font-medium mb-2">
-              <strong>Patient Date of Birth: </strong>
-              {patientDetails && new Date(patientDetails.dateOfBirth).toLocaleString('en-US', {
-                dateStyle: 'full',
-                timeStyle: 'short',
-                // timeZoneName: 'short',
-              })}
-            </label>
-            <label className="block text-lg font-medium mb-2">
-              <strong>Patient Email: </strong>
-              {patientDetails && patientDetails.email}
-            </label>
-            <label className="block text-lg font-medium mb-2">
-              <strong>Patient Phone Number: </strong>
-              {patientDetails && patientDetails.phoneNumber}
-            </label>
-
-          </div>
+              <div className="block text-lg font-medium mb-2">
+                <strong>Patient ID: </strong>
+                {patientDetails && patientDetails.healthcareID}
+              </div>
+              <div className="block text-lg font-medium mb-2">
+                <strong>Patient Name: </strong>
+                {patientDetails && patientDetails.preferredName}
+              </div>
+              <div className="block text-lg font-medium mb-2">
+                <strong>Patient Date of Birth: </strong>
+                {patientDetails && new Date(patientDetails.dateOfBirth).toLocaleString('en-US', {
+                  // dateStyle: 'full',
+                  // timeStyle: 'short',
+                  timeZoneName: 'longOffset',
+                })}
+              </div>
+              <div className="block text-lg font-medium mb-2">
+                <strong>Patient Email: </strong>
+                {patientDetails.email || 'Not Provided'}
+              </div>
+              <div className="block text-lg font-medium mb-2">
+                <strong>Patient Phone Number: </strong>
+                {patientDetails.phoneNumber || 'Not Provided'}
+              </div>
+            </div>
+          </Link>
         }
 
       </div>
