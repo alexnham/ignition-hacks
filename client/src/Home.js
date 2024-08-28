@@ -356,11 +356,30 @@ const AudioRecorder = () => {
           <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
             <h1 className="text-2xl font-bold mb-4">Patient Information</h1>
 
-            <label className="block text-lg font-medium mb-2"><strong>Patient ID: </strong>{patientDetails && patientDetails.healthcareID}</label>
-            <label className="block text-lg font-medium mb-2"><strong>Patient Name: </strong>{patientDetails && patientDetails.preferredName}</label>
-            <label className="block text-lg font-medium mb-2"><strong>Patient Date of Birth: </strong>{patientDetails && patientDetails.dateOfBirth}</label>
-            <label className="block text-lg font-medium mb-2"><strong>Patient Email: </strong>{patientDetails && patientDetails.email}</label>
-            <label className="block text-lg font-medium mb-2"><strong>Patient Phone Number: </strong>{patientDetails && patientDetails.phoneNumber}</label>
+            <label className="block text-lg font-medium mb-2">
+              <strong>Patient ID: </strong>
+              {patientDetails && patientDetails.healthcareID}
+            </label>
+            <label className="block text-lg font-medium mb-2">
+              <strong>Patient Name: </strong>
+              {patientDetails && patientDetails.preferredName}
+            </label>
+            <label className="block text-lg font-medium mb-2">
+              <strong>Patient Date of Birth: </strong>
+              {patientDetails && new Date(patientDetails.dateOfBirth).toLocaleString('en-US', {
+                dateStyle: 'full',
+                timeStyle: 'short',
+                // timeZoneName: 'short',
+              })}
+            </label>
+            <label className="block text-lg font-medium mb-2">
+              <strong>Patient Email: </strong>
+              {patientDetails && patientDetails.email}
+            </label>
+            <label className="block text-lg font-medium mb-2">
+              <strong>Patient Phone Number: </strong>
+              {patientDetails && patientDetails.phoneNumber}
+            </label>
 
           </div>
         }

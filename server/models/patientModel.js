@@ -14,7 +14,8 @@ const patientSchema = new Schema({
     required: true,
     trim: true,
     unique: true, // Ensure healthcareId is unique
-    match: [/^[A-Z0-9]+$/, 'Please enter a valid healthcare ID'] // Customize regex to fit specific format
+    uppercase: true,
+    match: [/^[A-Za-z0-9\s-]+$/, 'Please enter a valid healthcare ID'] // Customize regex to fit specific format
   },
   // firstName: {
   //   type: String,

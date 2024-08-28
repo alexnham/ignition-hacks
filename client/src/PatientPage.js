@@ -7,6 +7,7 @@ const PatientPage = () => {
   const [patient, setPatient] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isValid, setIsValid] = useState(true);
   const [formValues, setFormValues] = useState({
     preferredName: '',
     dateOfBirth: '',
@@ -48,34 +49,59 @@ const PatientPage = () => {
 
     fetchPatient();
   }, [id]); // Fetch data whenever the ID changes
-  const validateForm = () => {
-    const newErrors = {};
-    let isValid = true;
 
-    if (!formValues.preferredName) {
-      newErrors.preferredName = 'Preferred Name is required.';
-      isValid = false;
-    }
-    if (!formValues.dateOfBirth) {
-      newErrors.dateOfBirth = 'Date of Birth is required.';
-      isValid = false;
-    }
-    if (!formValues.healthcareID.match(/^[A-Z0-9]+$/)) {
-      newErrors.healthcareID = 'Healthcare ID must be alphanumeric and uppercase.';
-      isValid = false;
-    }
-    if (formValues.email && !formValues.email.match(/^.+@.+\..+$/)) {
-      newErrors.email = 'Please enter a valid email address.';
-      isValid = false;
-    }
-    if (formValues.phoneNumber && !formValues.phoneNumber.match(/^\+?[0-9]*$/)) {
-      newErrors.phoneNumber = 'Phone Number should be numeric with optional international code.';
-      isValid = false;
-    }
+  useEffect(() => {
+    const validateForm = async () => {
+      setIsValid(true);
+      const newErrors = {};
+      
+      // alert(data.healthcareID.toString());
+      try {
+        const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${formValues.healthcareID}`);
+        // Form validation logic
 
-    setErrors(newErrors);
-    return isValid;
-  };
+        if (!formValues.preferredName) {
+          newErrors.preferredName = 'Preferred Name is required.';
+          setIsValid(false);
+        }
+
+        if (!formValues.dateOfBirth) {
+          newErrors.dateOfBirth = 'Date of Birth is required.';
+          setIsValid(false);
+        }
+
+        if (!formValues.healthcareID.match(/^[A-Za-z0-9\s-]+$/)) {
+          newErrors.healthcareID = 'Healthcare ID can only contain letters, numbers, spaces, and dashes.';
+          setIsValid(false);
+        }
+
+        if (response.ok) {
+          const json = await response.json();
+          const data = json.healthcareID;
+          if (data && data !== patient.healthcareID) {
+            newErrors.healthcareID = 'Healthcare ID exist';
+            setIsValid(false);
+          }
+        }
+
+        if (formValues.email && !formValues.email.match(/^.+@.+\..+$/)) {
+          newErrors.email = 'Please enter a valid email address.';
+          setIsValid(false);
+        }
+
+        if (formValues.phoneNumber && !formValues.phoneNumber.match(/^\+?[0-9]*$/)) {
+          newErrors.phoneNumber = 'Phone Number should be numeric with optional international code.';
+          setIsValid(false);
+        }
+
+        setErrors(newErrors);
+      } catch (error) {
+        console.error('Error checking healthcare ID existence:', error);
+      }
+    };
+    validateForm();
+  }, [formValues, patient?.healthcareID]);
+
 
   const handleDelete = async () => {
     const response = await fetch(`http://localhost:4000/api/patients/${id}`, {
@@ -110,32 +136,32 @@ const PatientPage = () => {
     const { name, value } = e.target;
     setFormValues((prevValues) => ({
       ...prevValues,
-      [name]: value,
+      [name]: name === 'healthcareID' ? value.toUpperCase() : value,
     }));
   };
 
+
   const handleSave = async () => {
-    if (!validateForm()) {
-      return;
+    if (isValid) {
+      const response = await fetch(`http://localhost:4000/api/patients/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formValues),
+      });
+
+      if (response.ok) {
+        const updatedPatient = await response.json();
+        setPatient(updatedPatient);
+        setIsEditing(false);
+      } else {
+        // Handle server-side validation errors
+        const json = await response.json();
+        setErrors(json.errors || {});
+      }
     }
 
-    const response = await fetch(`http://localhost:4000/api/patients/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formValues),
-    });
-
-    if (response.ok) {
-      const updatedPatient = await response.json();
-      setPatient(updatedPatient);
-      setIsEditing(false);
-    } else {
-      // Handle server-side validation errors
-      const json = await response.json();
-      setErrors(json.errors || {});
-    }
   };
 
   if (notFound) {
@@ -162,6 +188,9 @@ const PatientPage = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
+      {/* {formValues.healthcareID.match(/^[A-Za-z0-9\s-]+$/)} */}
+      {/* <br></br> */}
+      {/* {isValid.toString()} */}
       <div className="flex justify-center mt-4 m-10">
         <button
           onClick={() => navigate('/patients')}
