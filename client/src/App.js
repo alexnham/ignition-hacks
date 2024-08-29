@@ -4,6 +4,7 @@ import AudioRecorder from './Home';
 import Patients from './Patients';
 import PatientPage from './PatientPage'
 import { PencilSquareIcon } from '@heroicons/react/24/outline'; // Import a cool icon
+import PatientCreate from './PatientCreate';
 
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
             <Route path="/" element={<AudioRecorder />} />
             <Route path="/patients" element={<Patients />} />
             <Route path="/patients/:id" element={<PatientPage />} />
+            <Route path="/patients/create" element={<PatientCreate />}></Route>
           </Routes>
         </div>
       </BrowserRouter>
