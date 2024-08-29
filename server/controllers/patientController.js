@@ -21,8 +21,8 @@ const getPatients = async (req, res) => {
       const patients = await Patient.find({})
         .sort({
           preferredName: 1,  // Sort by preferredName alphabetically
+          updatedAt: -1,      // Most recent updates first
           dateOfBirth: 1,    // Then by dateOfBirth
-          updatedAt: -1      // Most recent updates first
         });
 
       res.status(200).json(patients);

@@ -33,7 +33,9 @@ const PatientCreate = () => {
 
       // alert(data.healthcareID.toString());
       try {
-        const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${formValues.healthcareID}`);
+        const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${formValues.healthcareID}`, {
+          method: 'GET'
+        });
         // Form validation logic
 
         if (!formValues.preferredName) {
@@ -54,7 +56,10 @@ const PatientCreate = () => {
         if (response.ok) {
           const json = await response.json();
           const data = json.healthcareID;
-          if (data && data !== patient.healthcareID) {
+          // console.log(data);
+          // console.log(formValues.healthcareID);
+          // console.log(data !== formValues.healthcareID);
+          if (data) {
             newErrors.healthcareID = 'Healthcare ID exist';
             setIsValid(false);
           }
@@ -72,7 +77,7 @@ const PatientCreate = () => {
 
         setErrors(newErrors);
       } catch (error) {
-        console.error('Error checking healthcare ID existence:', error);
+        console.error('Error validating form:', error);
       }
     };
     validateForm();
@@ -99,7 +104,8 @@ const PatientCreate = () => {
       if (response.ok) {
         const updatedPatient = await response.json();
         setPatient(updatedPatient);
-        navigate(`/patients/${patient._id}`)
+        console.log(updatedPatient);
+        navigate(`/patients/${updatedPatient._id}`)
         // setIsEditing(false);
       } else {
         // Handle server-side validation errors
@@ -111,6 +117,9 @@ const PatientCreate = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
+      <h1>
+        {/* {isValid.toString()} */}
+      </h1>
       <div className="max-w-3xl w-full bg-white shadow-lg rounded-lg p-6">
         {/* <div> */}
         <h1 className="text-4xl font-bold mb-6">Edit Patient</h1>

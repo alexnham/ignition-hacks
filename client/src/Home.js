@@ -189,6 +189,10 @@ const AudioRecorder = () => {
     isRecording ? stopRecording() : startRecording();
   };
 
+  const handleCreatePatientClick = () => {
+    navigate('/patients/create')
+  }
+
   const downloadPdf = async () => {
     if (!audioBlob) return;
 
@@ -311,6 +315,14 @@ const AudioRecorder = () => {
             className={`px-4 py-2 text-white font-bold rounded-md ${isRecording ? 'bg-red-500' : 'bg-blue-500'}`}
           >
             {isRecording ? 'Stop Recording' : 'Start Recording'}
+          </button>
+
+          <button
+            onClick={handleCreatePatientClick}
+            className={`px-4 py-2 text-white font-bold rounded-md bg-blue-500 m-1`}
+          >
+            {/* {isRecording ? 'Stop Recording' : 'Start Recording'} */}
+            Create Patient
           </button>
 
           <div className="mt-4 flex gap-4">

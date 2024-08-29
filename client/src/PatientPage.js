@@ -57,7 +57,9 @@ const PatientPage = () => {
       
       // alert(data.healthcareID.toString());
       try {
-        const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${formValues.healthcareID}`);
+        const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${formValues.healthcareID}`, {
+          method: 'GET'
+        });
         // Form validation logic
 
         if (!formValues.preferredName) {
@@ -96,7 +98,7 @@ const PatientPage = () => {
 
         setErrors(newErrors);
       } catch (error) {
-        console.error('Error checking healthcare ID existence:', error);
+        console.error('Error validating form:', error);
       }
     };
     validateForm();
@@ -161,7 +163,6 @@ const PatientPage = () => {
         setErrors(json.errors || {});
       }
     }
-
   };
 
   if (notFound) {
