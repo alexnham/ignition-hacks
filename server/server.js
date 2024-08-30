@@ -4,6 +4,7 @@ const cors = require('cors');
 const axios = require('axios'); // Correct import for axios
 const { OpenAI } = require('openai');
 const patientRoutes = require('./routes/patient.js')
+const userRoutes = require('./routes/user.js')
 const mongoose = require('mongoose')
 
 dotenv.config();
@@ -25,6 +26,8 @@ app.use(express.json());
 
 // Patient routes
 app.use('/api/patients', patientRoutes);
+
+app.use('/api/user', userRoutes);
 
 // Connect to db
 mongoose.connect(process.env.MONGO_URI)

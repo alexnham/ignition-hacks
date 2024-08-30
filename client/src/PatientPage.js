@@ -54,7 +54,7 @@ const PatientPage = () => {
     const validateForm = async () => {
       setIsValid(true);
       const newErrors = {};
-      
+
       // alert(data.healthcareID.toString());
       try {
         const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${formValues.healthcareID}`, {
@@ -140,6 +140,10 @@ const PatientPage = () => {
       ...prevValues,
       [name]: name === 'healthcareID' ? value.toUpperCase() : value,
     }));
+
+    // Adjust the textarea height
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
   };
 
 
@@ -346,10 +350,10 @@ const PatientPage = () => {
             )}
 
             {/* {patient.notes && ( */}
-              <div className="mb-6">
-                <h2 className="text-2xl font-semibold">Notes:</h2>
-                <p className="text-lg break-words">{patient.notes || 'Not provided'}</p>
-              </div>
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold">Notes:</h2>
+              <p className="text-lg break-words">{patient.notes || 'Not provided'}</p>
+            </div>
             {/* )} */}
 
             <div className="flex justify-between mt-8">
