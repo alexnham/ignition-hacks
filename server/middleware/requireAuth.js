@@ -13,7 +13,7 @@ const requireAuth = async (req, res, next) => {
 
   const authorizationSplitString = authorization.split(' ');
 
-  console.log("auth split string: ", authorizationSplitString[0]);
+  // console.log("auth split string: ", authorizationSplitString[0]);
   const token = authorizationSplitString[1];
 
 

@@ -7,7 +7,7 @@ const PatientCreate = () => {
   const navigate = useNavigate(); // Hook for programmatic navigation
   const [patient, setPatient] = useState(null);
   const [isValid, setIsValid] = useState(true);
-  const { user } = useAuthContext;
+  const { user } = useAuthContext();
   // const [isEditing, setIsEditing] = useState(false);
   const [formValues, setFormValues] = useState({
     preferredName: '',
@@ -31,6 +31,9 @@ const PatientCreate = () => {
 
   useEffect(() => {
     const validateForm = async () => {
+      if (!user) {
+        return;
+      }
       setIsValid(true);
       const newErrors = {};
 
@@ -98,6 +101,11 @@ const PatientCreate = () => {
   };
 
   const handleCreate = async () => {
+
+    if (!user) {
+      return;
+    }
+
     if (isValid) {
       const response = await fetch(`http://localhost:4000/api/patients`, {
         method: 'POST',

@@ -6,12 +6,16 @@ import { useAuthContext } from '../hooks/useAuthContext';
 
 
 const Patients = () => {
-  const { user } = useAuthContext;
+  const { user } = useAuthContext();
   const [patients, setPatients] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPatients = async () => {
+      if (!user) {
+        return;
+      }
+
       const response = await fetch('http://localhost:4000/api/patients', {
         headers: {
           'Authorization': `Bearer ${user.token}`
@@ -24,7 +28,9 @@ const Patients = () => {
       }
     };
 
-    fetchPatients();
+    if (user) {
+      fetchPatients();
+    }
   }, [user]);
 
   const handleGoHome = () => {

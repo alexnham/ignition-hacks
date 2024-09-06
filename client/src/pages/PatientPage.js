@@ -4,7 +4,7 @@ import { useAuthContext } from '../hooks/useAuthContext';
 
 const PatientPage = () => {
   const { id } = useParams(); // Get patient ID from URL
-  const { user } = useAuthContext;
+  const { user } = useAuthContext();
   const navigate = useNavigate(); // Hook for programmatic navigation
   const [patient, setPatient] = useState(null);
   const [notFound, setNotFound] = useState(false);
@@ -31,6 +31,10 @@ const PatientPage = () => {
 
   useEffect(() => {
     const fetchPatient = async () => {
+      if (!user) {
+        return;
+      }
+
       const response = await fetch(`http://localhost:4000/api/patients/${id}`, {
         headers: {
           'Authorization': `Bearer ${user.token}`
@@ -53,18 +57,26 @@ const PatientPage = () => {
       }
     };
 
-    fetchPatient();
+    if (user) {
+      fetchPatient();
+    }
   }, [id, user]); // Fetch data whenever the ID changes
 
   useEffect(() => {
     const validateForm = async () => {
+      if (!user) {
+        return;
+      }
       setIsValid(true);
       const newErrors = {};
 
       // alert(data.healthcareID.toString());
       try {
         const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${formValues.healthcareID}`, {
-          method: 'GET'
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
         });
         // Form validation logic
 
@@ -107,13 +119,22 @@ const PatientPage = () => {
         console.error('Error validating form:', error);
       }
     };
-    validateForm();
-  }, [formValues, patient?.healthcareID]);
+    if (user) {
+      validateForm();
+    }
+  }, [formValues, patient?.healthcareID, user]);
 
 
   const handleDelete = async () => {
+    if (!user) {
+      return;
+    }
+
     const response = await fetch(`http://localhost:4000/api/patients/${id}`, {
       method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${user.token}`
+      }
     });
 
     if (response.ok) {
@@ -154,11 +175,16 @@ const PatientPage = () => {
 
 
   const handleSave = async () => {
+    if (!user) {
+      return;
+    }
+    
     if (isValid) {
       const response = await fetch(`http://localhost:4000/api/patients/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
         },
         body: JSON.stringify(formValues),
       });

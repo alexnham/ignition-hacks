@@ -22,7 +22,7 @@ const AudioRecorder = () => {
   const audioChunksRef = useRef([]);
   const navigate = useNavigate();
   // const { logout } = useLogout();
-  const { user } = useAuthContext
+  const { user } = useAuthContext();
 
   const goToPatients = () => {
     navigate("/patients");
@@ -30,6 +30,11 @@ const AudioRecorder = () => {
 
   useEffect(() => {
     const fetchPatients = async () => {
+
+      if (!user) {
+        return;
+      }
+
       const response = await fetch('http://localhost:4000/api/patients', {
         headers: {
           'Authorization': `Bearer ${user.token}`
@@ -45,6 +50,7 @@ const AudioRecorder = () => {
     if (user) {
       fetchPatients();
     }
+
   }, [user])
 
   // function getLastWord(str) {
@@ -53,6 +59,10 @@ const AudioRecorder = () => {
   // }
 
   const handleCheckPatient = async () => {
+    if (!user) {
+      return;
+    }
+    
     const idPattern = /^[A-Z0-9]+$/; // Pattern to accept only capital letters and numbers
 
     if (!idPattern.test(patientId)) {
@@ -62,6 +72,7 @@ const AudioRecorder = () => {
 
     setIsLoading(true);
     try {
+      console.log(user)
       const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${patientId}`, {
         headers: {
           'Authorization': `Bearer ${user.token}`
