@@ -7,8 +7,13 @@ const {
   deletePatient,
   updatePatient,
 } = require('../controllers/patientController.js')
+const requireAuth = require('../middleware/requireAuth.js') 
 
 const router = express.Router()
+
+// Require auth for all patients actions
+router.use(requireAuth);
+
 
 // GET all the patients
 router.get('/', getPatients);

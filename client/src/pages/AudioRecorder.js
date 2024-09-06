@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { PencilSquareIcon } from '@heroicons/react/24/outline'; // Import a cool icon
 import { useNavigate, Link } from 'react-router-dom';
+import { useLogout } from '../hooks/useLogout';
+import NavBar from '../components/NavBar'
+import { useAuthContext } from '../hooks/useAuthContext';
+// import { useAuthContext } from '../hooks/useAuthContext';
 
 const AudioRecorder = () => {
   const [patients, setPatients] = useState(null);
@@ -17,6 +21,8 @@ const AudioRecorder = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const navigate = useNavigate();
+  // const { logout } = useLogout();
+  const { user } = useAuthContext
 
   const goToPatients = () => {
     navigate("/patients");
@@ -24,7 +30,11 @@ const AudioRecorder = () => {
 
   useEffect(() => {
     const fetchPatients = async () => {
-      const response = await fetch('http://localhost:4000/api/patients')
+      const response = await fetch('http://localhost:4000/api/patients', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      })
       const json = await response.json();
 
       if (response.ok) {
@@ -32,8 +42,15 @@ const AudioRecorder = () => {
       }
     }
 
-    fetchPatients();
-  }, [])
+    if (user) {
+      fetchPatients();
+    }
+  }, [user])
+
+  // function getLastWord(str) {
+  //   const words = str.trim().split(/\s+/); // Split by one or more spaces
+  //   return words[words.length - 1];        // Return the last word
+  // }
 
   const handleCheckPatient = async () => {
     const idPattern = /^[A-Z0-9]+$/; // Pattern to accept only capital letters and numbers
@@ -45,7 +62,12 @@ const AudioRecorder = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${patientId}`);
+      const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${patientId}`, {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+      
       console.log(response)
       const data = await response.json();
 
@@ -193,6 +215,14 @@ const AudioRecorder = () => {
     navigate('/patients/create')
   }
 
+  // const handleLoginClick = () => {
+  //   navigate('/login');
+  // }
+
+  // const handleLogout = () => {
+  //   logout();
+  // }
+
   const downloadPdf = async () => {
     if (!audioBlob) return;
 
@@ -268,10 +298,39 @@ const AudioRecorder = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <h1 className='text-xl absolute top-10 left-10'>Logged In As: Dr. Khangura</h1>
+
+      <NavBar />
+      {/* <div>
+        {user && (
+          <div>
+            <h1 className='text-xl absolute top-10 left-10'>Logged In As: Dr. {getLastWord(user.fullName)}</h1>
+
+            <button
+              onClick={handleLogout}
+              className="absolute top-10 right-10 px-4 py-2 text-white bg-blue-500 rounded-md"
+            >
+              Log Out
+            </button>
+          </div>
+        )}
+
+        {!user && (
+          <div>
+            <button
+              onClick={handleLoginClick}
+              className="absolute top-10 right-10 px-4 py-2 text-white bg-blue-500 rounded-md"
+            >
+              Log In
+            </button>
+          </div>
+        )}
+      </div> */}
+
 
       <div className="flex justify-center absolute top-10 mb-6">
-        <PencilSquareIcon className="h-16 w-16 text-blue-500" />
+        <Link to={"/"}>
+          <PencilSquareIcon className="h-16 w-16 text-blue-500" />
+        </Link>
       </div>
 
       <div className='flex flex-row flex-wrap items-center justify-center gap-4'>

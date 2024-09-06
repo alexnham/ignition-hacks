@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 const PatientPage = () => {
   const { id } = useParams(); // Get patient ID from URL
+  const { user } = useAuthContext;
   const navigate = useNavigate(); // Hook for programmatic navigation
   const [patient, setPatient] = useState(null);
   const [notFound, setNotFound] = useState(false);
@@ -29,7 +31,11 @@ const PatientPage = () => {
 
   useEffect(() => {
     const fetchPatient = async () => {
-      const response = await fetch(`http://localhost:4000/api/patients/${id}`);
+      const response = await fetch(`http://localhost:4000/api/patients/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
       if (response.ok) {
         const json = await response.json();
         setPatient(json);
@@ -48,7 +54,7 @@ const PatientPage = () => {
     };
 
     fetchPatient();
-  }, [id]); // Fetch data whenever the ID changes
+  }, [id, user]); // Fetch data whenever the ID changes
 
   useEffect(() => {
     const validateForm = async () => {

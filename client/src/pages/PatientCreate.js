@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 const PatientCreate = () => {
   // const { id } = useParams(); // Get patient ID from URL
   const navigate = useNavigate(); // Hook for programmatic navigation
   const [patient, setPatient] = useState(null);
   const [isValid, setIsValid] = useState(true);
+  const { user } = useAuthContext;
   // const [isEditing, setIsEditing] = useState(false);
   const [formValues, setFormValues] = useState({
     preferredName: '',
@@ -26,6 +28,7 @@ const PatientCreate = () => {
     notes: '',
   });
 
+
   useEffect(() => {
     const validateForm = async () => {
       setIsValid(true);
@@ -34,7 +37,10 @@ const PatientCreate = () => {
       // alert(data.healthcareID.toString());
       try {
         const response = await fetch(`http://localhost:4000/api/patients?healthcareID=${formValues.healthcareID}`, {
-          method: 'GET'
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
         });
         // Form validation logic
 
@@ -81,7 +87,7 @@ const PatientCreate = () => {
       }
     };
     validateForm();
-  }, [formValues, patient?.healthcareID]);
+  }, [formValues, patient?.healthcareID, user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -97,6 +103,7 @@ const PatientCreate = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
         },
         body: JSON.stringify(formValues),
       });
@@ -117,9 +124,15 @@ const PatientCreate = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
-      <h1>
-        {/* {isValid.toString()} */}
-      </h1>
+      <div className="flex justify-center mt-4 m-10">
+        <button
+          onClick={() => navigate('/')}
+          className="px-8 py-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-2xl font-bold"
+        >
+          Home
+        </button>
+      </div>
+
       <div className="max-w-3xl w-full bg-white shadow-lg rounded-lg p-6">
         {/* <div> */}
         <h1 className="text-4xl font-bold mb-6">Edit Patient</h1>
